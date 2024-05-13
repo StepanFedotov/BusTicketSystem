@@ -30,6 +30,7 @@ class Client():
         self.fio = client_base[login]["fio"]
         self.passport = client_base[login]["passport"]
         self.phone = client_base[login]["phone"]
+        self.login = login
         self.reservations = client_base[login]["reservations"]
         self.tickets = client_base[login]["tickets"]
 
@@ -203,25 +204,77 @@ class WindowAdmin(QtWidgets.QMainWindow):
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
 
         
-class WindowUser(QtWidgets.QMainWindow):
+class WindowUser(QDialog):
     """
     Класс окна Пользователя
     """
-    def __init__(self, name):
+    def __init__(self, client):
         """
-        Инициализация через конструктор класса QMainWindow, добавление
-        элементов
+        Инициализация через конструктор класса QDialog, добавление элементов
         """
-        super().__init__()
-        self.resize(640, 480)        
-        self.centralwidget = QtWidgets.QWidget()
-        self.setCentralWidget(self.centralwidget)
+        super(WindowUser, self).__init__()
+        self.winuser_welcome_label = QLabel('Добро пожаловать, ' + client.fio)
+        self.winuser_login_label = QLabel('Вы зашли под login: ' + client.login)
+        self.winuser_phone_label = QLabel('Привязанный номер телефона: ' \
+                                        + client.phone)
+        self.winuser_passport_label = QLabel('Паспортные данные : ' + client.passport)
+        reserv = list(client.reservations.items())
+        reserv_str = "\n"
+        for each in reserv:
+            reserv_str = reserv_str + "Рейс №" + str(each[0]) + " Место №" \
+                       + str(each[1]) + "\n"
+        self.winuser_reserv_label = QLabel('У вас есть следующие '\
+                                            'неоплаченные бронирования: ' \
+                                                + reserv_str)
+        tickets = list(client.tickets.items())
+        tickets_str = "\n"
+        for each in tickets:
+            tickets_str = tickets_str + "Рейс №" + str(each[0]) + " Место №" \
+                       + str(each[1]) + "\n"
+        self.winuser_tickets_label = QLabel('У вас есть следующие '\
+                                            'билеты: ' \
+                                                + tickets_str)
         
-        self.label = QtWidgets.QLabel(f'<h1>Привет, {name}!</h1>',
-                                      alignment=Qt.AlignCenter)
+        self.welcome_h_layout = QHBoxLayout()
+        self.login_h_layout = QHBoxLayout()
+        self.phone_h_layout = QHBoxLayout()
+        self.passport_h_layout = QHBoxLayout()
+        self.reserv_h_layout = QHBoxLayout()
+        self.tickets_h_layout = QHBoxLayout()
+        self.all_v_layout = QVBoxLayout()
         
-        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout_init()
+        
+        
+    def layout_init(self):
+        """
+        Функция инициализации слоя - добавления виджетов
+        """
+        self.welcome_h_layout.addWidget(self.winuser_welcome_label)
+        self.login_h_layout.addWidget(self.winuser_login_label)
+        self.phone_h_layout.addWidget(self.winuser_phone_label)
+        self.passport_h_layout.addWidget(self.winuser_passport_label)
+        self.reserv_h_layout.addWidget(self.winuser_reserv_label)
+        self.tickets_h_layout.addWidget(self.winuser_tickets_label)
+        
+        self.all_v_layout.addLayout(self.welcome_h_layout)
+        self.all_v_layout.addLayout(self.login_h_layout)
+        self.all_v_layout.addLayout(self.phone_h_layout)
+        self.all_v_layout.addLayout(self.passport_h_layout)
+        self.all_v_layout.addLayout(self.reserv_h_layout)
+        self.all_v_layout.addLayout(self.tickets_h_layout)
+        
+        self.setLayout(self.all_v_layout)
+        
+        # self.resize(640, 480)        
+        # self.centralwidget = QtWidgets.QWidget()
+        # self.setCentralWidget(self.centralwidget)
+        
+        # self.label = QtWidgets.QLabel(f'<h1>Привет, {name}!</h1>',
+        #                               alignment=Qt.AlignCenter)
+        
+        # self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        # self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
         
 
 class Login(QWidget):
@@ -301,12 +354,13 @@ class Login(QWidget):
             QMessageBox.critical(self, 'Wrong', 'Wrong Username or Password!')
             return
         
-        user = self.user_line.text().split('@')[0]
-        if user == 'admin':
+        user = self.user_line.text()
+        if user == 'admin@gmail.com':
             self.windowAdmin = WindowAdmin(user)
             self.windowAdmin.show()
         else:
-            self.windowUser = WindowUser(user)
+            client = Client(user)
+            self.windowUser = WindowUser(client)
             self.windowUser.show()
             
         self.close()   
