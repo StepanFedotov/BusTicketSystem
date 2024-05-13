@@ -5,6 +5,34 @@ from PyQt5.Qt import *
 
 import sys
   
+
+#Импорт базы Пользователей и информации о них
+client_base = {}
+with open('client_base.txt', 'r') as file:
+    client_base = json.load(file)
+
+def Update_Client_Base():
+    """
+    Функция обновления базы Пользователей и информации о них
+    """
+    with open('client_base.txt', 'w+') as file:
+        json.dump(client_base, file)
+        
+
+class Client():
+    """
+    Класс клиента (пассажира)
+    """
+    def __init__(self, login):
+        """
+        Инициализация объекта класса
+        """
+        self.fio = client_base[login]["fio"]
+        self.passport = client_base[login]["passport"]
+        self.phone = client_base[login]["phone"]
+        self.reservations = client_base[login]["reservations"]
+        self.tickets = client_base[login]["tickets"]
+
                                                                                 
 #Импорт базы Пользователей и их паролей из файла
 pwd_dictionary = {}
@@ -32,14 +60,24 @@ class SigninPage(QDialog):
         self.signin_user_label = QLabel('E-mail:')
         self.signin_pwd_label = QLabel('Password:')
         self.signin_pwd2_label = QLabel('Password:')
+        self.signin_fio_label = QLabel('Ваше ФИО:')
+        self.signin_passport_label = QLabel('Паспортные данные:')
+        self.signin_phone_label = QLabel('Номер телефона:')
+        
         self.signin_user_line = QLineEdit()
         self.signin_pwd_line = QLineEdit()
         self.signin_pwd2_line = QLineEdit()
+        self.signin_fio_line = QLineEdit()
+        self.signin_passport_line = QLineEdit()
+        self.signin_phone_line = QLineEdit()
         self.signin_button = QPushButton('Sign in')
 
         self.user_h_layout = QHBoxLayout()
         self.pwd_h_layout = QHBoxLayout()
         self.pwd2_h_layout = QHBoxLayout()
+        self.fio_h_layout = QHBoxLayout()
+        self.passport_h_layout = QHBoxLayout()
+        self.phone_h_layout = QHBoxLayout()
         self.all_v_layout = QVBoxLayout()
 
         self.lineedit_init()
@@ -57,10 +95,19 @@ class SigninPage(QDialog):
         self.pwd_h_layout.addWidget(self.signin_pwd_line)
         self.pwd2_h_layout.addWidget(self.signin_pwd2_label)
         self.pwd2_h_layout.addWidget(self.signin_pwd2_line)
+        self.fio_h_layout.addWidget(self.signin_fio_label)
+        self.fio_h_layout.addWidget(self.signin_fio_line)
+        self.passport_h_layout.addWidget(self.signin_passport_label)
+        self.passport_h_layout.addWidget(self.signin_passport_line)
+        self.phone_h_layout.addWidget(self.signin_phone_label)
+        self.phone_h_layout.addWidget(self.signin_phone_line)
 
         self.all_v_layout.addLayout(self.user_h_layout)
         self.all_v_layout.addLayout(self.pwd_h_layout)
         self.all_v_layout.addLayout(self.pwd2_h_layout)
+        self.all_v_layout.addLayout(self.fio_h_layout)
+        self.all_v_layout.addLayout(self.passport_h_layout)
+        self.all_v_layout.addLayout(self.phone_h_layout)
         self.all_v_layout.addWidget(self.signin_button)
 
         self.setLayout(self.all_v_layout)
@@ -77,6 +124,9 @@ class SigninPage(QDialog):
         self.signin_user_line.textChanged.connect(self.check_input_func)
         self.signin_pwd_line.textChanged.connect(self.check_input_func)
         self.signin_pwd2_line.textChanged.connect(self.check_input_func)
+        self.signin_fio_line.textChanged.connect(self.check_input_func)
+        self.signin_passport_line.textChanged.connect(self.check_input_func)
+        self.signin_phone_line.textChanged.connect(self.check_input_func)
     
     
     def pushbutton_init(self):
@@ -92,8 +142,11 @@ class SigninPage(QDialog):
         Функция контроля активности кнопки signin_button
         """
         if self.signin_user_line.text() and \
-           self.signin_pwd_line.text() and \
-           self.signin_pwd2_line.text():
+            self.signin_pwd_line.text() and \
+            self.signin_pwd2_line.text() and \
+            self.signin_fio_line.text() and \
+            self.signin_passport_line.text() and \
+            self.signin_phone_line.text():
             self.signin_button.setEnabled(True)
         else:
             self.signin_button.setEnabled(False)
@@ -109,9 +162,17 @@ class SigninPage(QDialog):
         elif self.signin_user_line.text() not in pwd_dictionary:
             pwd_dictionary[self.signin_user_line.text()] = self\
                                .signin_pwd_line.text()
+            client_base[self.signin_user_line.text()] = {
+                            "fio": self.signin_fio_line.text(),
+                            "passport": self.signin_passport_line.text(),
+                            "phone": self.signin_phone_line.text(),
+                            "reservations": {},
+                            "tickets": {}
+                            }
             QMessageBox.information(self, 'Info', 'Register Successfully')
             self.close()
             Update_PWD()
+            Update_Client_Base()
         else:
             QMessageBox.critical(self, 'Wrong', 'This Username Has Been'\
                                                 ' Registered!')
