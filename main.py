@@ -41,7 +41,7 @@ class Route():
         info_str = "Рейс №" + self.route + ", Пункт отправления: " \
                    + self.depart_point + ", Пункт назначения: " \
                    + self.destin_point + ", время отправления: " \
-                   + self.depart_time
+                   + self.depart_time + "\n"
         return(info_str)
 
 #Импорт базы Пользователей и информации о них
@@ -71,6 +71,11 @@ class Client():
         self.login = login
         self.reservations = client_base[login]["reservations"]
         self.tickets = client_base[login]["tickets"]
+        
+        
+    def Update_Tickets(self):
+         client_base[self.login]["reservations"] = self.reservations
+         client_base[self.login]["tickets"] = self.tickets
 
                                                                                 
 #Импорт базы Пользователей и их паролей из файла
@@ -241,6 +246,68 @@ class WindowAdmin(QtWidgets.QMainWindow):
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
 
+
+class Pay_Window(QDialog):
+    """
+    Класс окна Оплаты
+    """
+    def __init__(self, client):
+        """
+        Инициализация через конструктор класса QDialog, добавление элементов
+        """
+        super(Pay_Window, self).__init__()
+        self.client = client
+        reserv = list(client.reservations.items())
+        reserv_str = "\n"
+        for each in reserv:
+            reserv_str = reserv_str + "Рейс №" + str(each[0]) + " Место №" \
+                       + str(each[1]) + "\n"
+        self.paywin_reserv_label = QLabel('У вас есть следующие '\
+                                            'неоплаченные бронирования: ' \
+                                                + reserv_str)
+        reserv = list(self.client.reservations.items())
+        cost = 0
+        for each in reserv:
+            route = Route(each[0])
+            cost += route.ticket_price
+        self.paywin_cost_label = QLabel(f'Общая стоимость: {cost}')
+        self.pay_button = QPushButton('Оплатить')
+            
+        self.all_v_layout = QVBoxLayout()
+        
+        self.pushbutton_init()
+        self.layout_init()
+        
+        
+    def layout_init(self):
+        """
+        Функция инициализации слоя - добавления виджетов
+        """
+        self.all_v_layout.addWidget(self.paywin_reserv_label)
+        self.all_v_layout.addWidget(self.paywin_cost_label)
+        self.all_v_layout.addWidget(self.pay_button)
+        
+        self.setLayout(self.all_v_layout)
+       
+        
+    def pushbutton_init(self):
+        """
+        Функция инициализации кнопки pay_button, подключения хэндлера
+        """
+        self.pay_button.clicked.connect(self.check_pay_func)
+        
+
+    def check_pay_func(self):
+        """
+        Функция хэндлер нажатия на кнопку pay_button
+        """
+        QMessageBox.information(self, 'Info', 'Оплата прошла успешно!')
+        self.client.tickets.update(self.client.reservations)
+        self.client.reservations = {}
+        self.client.Update_Tickets()
+        Update_Client_Base()
+        self.close()
+
         
 class WindowUser(QDialog):
     """
@@ -251,6 +318,7 @@ class WindowUser(QDialog):
         Инициализация через конструктор класса QDialog, добавление элементов
         """
         super(WindowUser, self).__init__()
+        self.client = client
         self.winuser_welcome_label = QLabel('Добро пожаловать, ' + client.fio)
         self.winuser_login_label = QLabel('Вы зашли под login: ' + client.login)
         self.winuser_phone_label = QLabel('Привязанный номер телефона: ' \
@@ -272,15 +340,13 @@ class WindowUser(QDialog):
         self.winuser_tickets_label = QLabel('У вас есть следующие '\
                                             'билеты: ' \
                                                 + tickets_str)
-        
-        self.welcome_h_layout = QHBoxLayout()
-        self.login_h_layout = QHBoxLayout()
-        self.phone_h_layout = QHBoxLayout()
-        self.passport_h_layout = QHBoxLayout()
-        self.reserv_h_layout = QHBoxLayout()
-        self.tickets_h_layout = QHBoxLayout()
+        self.route_info_button = QPushButton('Информация о моих рейсах')
+        self.resrv_pay_button = QPushButton('Оплатить бронирования')
+            
+        self.buttons_h_layout = QHBoxLayout()
         self.all_v_layout = QVBoxLayout()
         
+        self.pushbutton_init()
         self.layout_init()
         
         
@@ -288,22 +354,59 @@ class WindowUser(QDialog):
         """
         Функция инициализации слоя - добавления виджетов
         """
-        self.welcome_h_layout.addWidget(self.winuser_welcome_label)
-        self.login_h_layout.addWidget(self.winuser_login_label)
-        self.phone_h_layout.addWidget(self.winuser_phone_label)
-        self.passport_h_layout.addWidget(self.winuser_passport_label)
-        self.reserv_h_layout.addWidget(self.winuser_reserv_label)
-        self.tickets_h_layout.addWidget(self.winuser_tickets_label)
+        self.buttons_h_layout.addWidget(self.route_info_button)
+        self.buttons_h_layout.addWidget(self.resrv_pay_button)
         
-        self.all_v_layout.addLayout(self.welcome_h_layout)
-        self.all_v_layout.addLayout(self.login_h_layout)
-        self.all_v_layout.addLayout(self.phone_h_layout)
-        self.all_v_layout.addLayout(self.passport_h_layout)
-        self.all_v_layout.addLayout(self.reserv_h_layout)
-        self.all_v_layout.addLayout(self.tickets_h_layout)
+        self.all_v_layout.addWidget(self.winuser_welcome_label)
+        self.all_v_layout.addWidget(self.winuser_login_label)
+        self.all_v_layout.addWidget(self.winuser_phone_label)
+        self.all_v_layout.addWidget(self.winuser_passport_label)
+        self.all_v_layout.addWidget(self.winuser_reserv_label)
+        self.all_v_layout.addWidget(self.winuser_tickets_label)
+        self.all_v_layout.addLayout(self.buttons_h_layout)
         
         self.setLayout(self.all_v_layout)
+       
         
+    def pushbutton_init(self):
+        """
+        Функция инициализации кнопки route_info_button, подключения хэндлера
+        """
+        self.route_info_button.clicked.connect(self.check_route_info_func)
+        self.resrv_pay_button.clicked.connect(self.check_reserv_pay_func)
+
+
+    def check_route_info_func(self):
+        """
+        Функция хэндлер нажатия на кнопку route_info_button
+        """
+        if self.client.reservations == {} and self.client.tickets == {}:
+            QMessageBox.critical(self, 'Wrong', 'У вас нет бронирований'\
+                                                ' или купленных билетов!')
+        else:
+            reserv = list(self.client.reservations.items())
+            info_str = "Ваши рейсы:\n"
+            for each in reserv:
+                route = Route(each[0])
+                info_str = info_str + route.Route_Info()
+            tickets = list(self.client.tickets.items())
+            for each in tickets:
+                route = Route(each[0])
+                info_str = info_str + route.Route_Info()
+            QMessageBox.information(self, 'Информация о рейсах', info_str)
+            
+
+    def check_reserv_pay_func(self):
+        """
+        Функция хэндлер нажатия на кнопку reserv_pay_button
+        """
+        if self.client.reservations == {}:
+            QMessageBox.critical(self, 'Wrong', 'У вас нет бронирований')
+        else:
+            self.paywin = Pay_Window(self.client)
+            self.paywin.exec_()
+            self.close()
+            
 
 class Login(QWidget):
     """
@@ -383,15 +486,15 @@ class Login(QWidget):
             return
         
         user = self.user_line.text()
+        self.user_line.clear()
+        self.pwd_line.clear()
         if user == 'admin@gmail.com':
             self.windowAdmin = WindowAdmin(user)
-            self.windowAdmin.show()
+            self.windowAdmin.exec_()
         else:
             client = Client(user)
             self.windowUser = WindowUser(client)
-            self.windowUser.show()
-            
-        self.close()   
+            self.windowUser.exec_()   
 
     
     def show_signin_page_func(self):
