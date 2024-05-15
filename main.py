@@ -44,6 +44,7 @@ class Route():
                    + self.depart_time + "\n"
         return(info_str)
 
+
 #Импорт базы Пользователей и информации о них
 client_base = {}
 with open('client_base.txt', 'r') as file:
@@ -74,15 +75,17 @@ class Client():
         
         
     def Update_Tickets(self):
-         client_base[self.login]["reservations"] = self.reservations
-         client_base[self.login]["tickets"] = self.tickets
+        """
+        Обновление информации о билетах и бронированиях
+        """
+        client_base[self.login]["reservations"] = self.reservations
+        client_base[self.login]["tickets"] = self.tickets
 
                                                                                 
 #Импорт базы Пользователей и их паролей из файла
 pwd_dictionary = {}
 with open('pwd_dictionary.txt', 'r') as file:
     pwd_dictionary = json.load(file)
-
 
 def Update_PWD():
     """
@@ -260,17 +263,16 @@ class Pay_Window(QDialog):
         reserv = list(client.reservations.items())
         reserv_str = "\n"
         for each in reserv:
-            reserv_str = reserv_str + "Рейс №" + str(each[0]) + " Место №" \
-                       + str(each[1]) + "\n"
+            reserv_str += f"Рейс №{each[0]} Место №{each[1]}\n"
         self.paywin_reserv_label = QLabel('У вас есть следующие '\
-                                            'неоплаченные бронирования: ' \
-                                                + reserv_str)
+                                          'неоплаченные бронирования: ' \
+                                          + reserv_str)
         reserv = list(self.client.reservations.items())
         cost = 0
         for each in reserv:
             route = Route(each[0])
             cost += route.ticket_price
-        self.paywin_cost_label = QLabel(f'Общая стоимость: {cost}')
+        self.paywin_cost_label = QLabel(f'Общая стоимость: {cost}$')
         self.pay_button = QPushButton('Оплатить')
             
         self.all_v_layout = QVBoxLayout()
@@ -320,26 +322,26 @@ class WindowUser(QDialog):
         super(WindowUser, self).__init__()
         self.client = client
         self.winuser_welcome_label = QLabel('Добро пожаловать, ' + client.fio)
-        self.winuser_login_label = QLabel('Вы зашли под login: ' + client.login)
+        self.winuser_login_label = QLabel('Вы зашли под login: ' \
+                                          + client.login)
         self.winuser_phone_label = QLabel('Привязанный номер телефона: ' \
                                         + client.phone)
-        self.winuser_passport_label = QLabel('Паспортные данные : ' + client.passport)
+        self.winuser_passport_label = QLabel('Паспортные данные : ' \
+                                             + client.passport)
         reserv = list(client.reservations.items())
         reserv_str = "\n"
         for each in reserv:
-            reserv_str = reserv_str + "Рейс №" + str(each[0]) + " Место №" \
-                       + str(each[1]) + "\n"
+            reserv_str += f"Рейс №{each[0]} Место №{each[1]}\n"
         self.winuser_reserv_label = QLabel('У вас есть следующие '\
-                                            'неоплаченные бронирования: ' \
-                                                + reserv_str)
+                                           'неоплаченные бронирования: ' \
+                                           + reserv_str)
         tickets = list(client.tickets.items())
         tickets_str = "\n"
         for each in tickets:
-            tickets_str = tickets_str + "Рейс №" + str(each[0]) + " Место №" \
-                       + str(each[1]) + "\n"
+            tickets_str += f"Рейс №{each[0]} Место №{each[1]}\n"
         self.winuser_tickets_label = QLabel('У вас есть следующие '\
                                             'билеты: ' \
-                                                + tickets_str)
+                                            + tickets_str)
         self.route_info_button = QPushButton('Информация о моих рейсах')
         self.resrv_pay_button = QPushButton('Оплатить бронирования')
             
@@ -388,11 +390,11 @@ class WindowUser(QDialog):
             info_str = "Ваши рейсы:\n"
             for each in reserv:
                 route = Route(each[0])
-                info_str = info_str + route.Route_Info()
+                info_str += route.Route_Info()
             tickets = list(self.client.tickets.items())
             for each in tickets:
                 route = Route(each[0])
-                info_str = info_str + route.Route_Info()
+                info_str += route.Route_Info()
             QMessageBox.information(self, 'Информация о рейсах', info_str)
             
 
