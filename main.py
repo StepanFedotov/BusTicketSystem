@@ -1,3 +1,7 @@
+from Classes.ClientClass import Client
+
+from Classes.RouteClass import Route
+
 import json
 
 from PyQt5 import QtWidgets
@@ -17,32 +21,6 @@ def Update_Route_Base():
     """
     with open('route_base.txt', 'w+') as file:
         json.dump(route_base, file)
-        
-        
-class Route():
-    """
-    Класс Рейса
-    """
-    def __init__(self, route):
-        """
-        Инициализация объекта класса
-        """
-        self.route = route
-        self.depart_point = route_base[route]["depart_point"]
-        self.destin_point = route_base[route]["destin_point"]
-        self.depart_time = route_base[route]["depart_time"]
-        self.ticket_price = route_base[route]["ticket_price"]
-        self.seats = route_base[route]["seats"]
-
-    def Route_Info(self):
-        """
-        Функция получения информации о рейсе
-        """
-        info_str = "Рейс №" + self.route + ", Пункт отправления: " \
-                   + self.depart_point + ", Пункт назначения: " \
-                   + self.destin_point + ", время отправления: " \
-                   + self.depart_time + "\n"
-        return(info_str)
 
 
 #Импорт базы Пользователей и информации о них
@@ -56,30 +34,6 @@ def Update_Client_Base():
     """
     with open('client_base.txt', 'w+') as file:
         json.dump(client_base, file)
-        
-
-class Client():
-    """
-    Класс клиента (пассажира)
-    """
-    def __init__(self, login):
-        """
-        Инициализация объекта класса
-        """
-        self.fio = client_base[login]["fio"]
-        self.passport = client_base[login]["passport"]
-        self.phone = client_base[login]["phone"]
-        self.login = login
-        self.reservations = client_base[login]["reservations"]
-        self.tickets = client_base[login]["tickets"]
-        
-        
-    def Update_Tickets(self):
-        """
-        Обновление информации о билетах и бронированиях
-        """
-        client_base[self.login]["reservations"] = self.reservations
-        client_base[self.login]["tickets"] = self.tickets
 
                                                                                 
 #Импорт базы Пользователей и их паролей из файла
@@ -270,7 +224,7 @@ class Pay_Window(QDialog):
         reserv = list(self.client.reservations.items())
         cost = 0
         for each in reserv:
-            route = Route(each[0])
+            route = Route(each[0],route_base)
             cost += route.ticket_price
         self.paywin_cost_label = QLabel(f'Общая стоимость: {cost}$')
         self.pay_button = QPushButton('Оплатить')
@@ -306,7 +260,8 @@ class Pay_Window(QDialog):
         QMessageBox.information(self, 'Info', 'Оплата прошла успешно!')
         self.client.tickets.update(self.client.reservations)
         self.client.reservations = {}
-        self.client.Update_Tickets()
+        global client_base
+        client_base = self.client.Update_Tickets(client_base)
         Update_Client_Base()
         self.close()
 
@@ -389,11 +344,11 @@ class WindowUser(QDialog):
             reserv = list(self.client.reservations.items())
             info_str = "Ваши рейсы:\n"
             for each in reserv:
-                route = Route(each[0])
+                route = Route(each[0],route_base)
                 info_str += route.Route_Info()
             tickets = list(self.client.tickets.items())
             for each in tickets:
-                route = Route(each[0])
+                route = Route(each[0],route_base)
                 info_str += route.Route_Info()
             QMessageBox.information(self, 'Информация о рейсах', info_str)
             
@@ -494,7 +449,7 @@ class Login(QWidget):
             self.windowAdmin = WindowAdmin(user)
             self.windowAdmin.exec_()
         else:
-            client = Client(user)
+            client = Client(user, client_base)
             self.windowUser = WindowUser(client)
             self.windowUser.exec_()   
 
