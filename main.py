@@ -10,17 +10,18 @@ from PyQt5.Qt import *
 import sys
   
 
+def Update_Base(file_name, data):
+    """
+    Функция обновления баз данных
+    """
+    with open(file_name, 'w+') as file:
+        json.dump(data, file)
+
+
 #Импорт базы Рейсов и информации о них
 route_base = {}
 with open('route_base.txt', 'r') as file:
     route_base = json.load(file)
-
-def Update_Route_Base():
-    """
-    Функция обновления базы Рейсов и информации о них
-    """
-    with open('route_base.txt', 'w+') as file:
-        json.dump(route_base, file)
 
 
 #Импорт базы Пользователей и информации о них
@@ -28,25 +29,11 @@ client_base = {}
 with open('client_base.txt', 'r') as file:
     client_base = json.load(file)
 
-def Update_Client_Base():
-    """
-    Функция обновления базы Пользователей и информации о них
-    """
-    with open('client_base.txt', 'w+') as file:
-        json.dump(client_base, file)
-
                                                                                 
 #Импорт базы Пользователей и их паролей из файла
 pwd_dictionary = {}
 with open('pwd_dictionary.txt', 'r') as file:
     pwd_dictionary = json.load(file)
-
-def Update_PWD():
-    """
-    Функция обновления базы Пользователей и паролей
-    """
-    with open('pwd_dictionary.txt', 'w+') as file:
-        json.dump(pwd_dictionary, file)
 
 
 class SigninPage(QDialog):
@@ -172,8 +159,8 @@ class SigninPage(QDialog):
                             }
             QMessageBox.information(self, 'Info', 'Register Successfully')
             self.close()
-            Update_PWD()
-            Update_Client_Base()
+            Update_Base('pwd_dictionary.txt', pwd_dictionary)
+            Update_Base('client_base.txt', client_base)
         else:
             QMessageBox.critical(self, 'Wrong', 'This Username Has Been'\
                                                 ' Registered!')
@@ -262,7 +249,7 @@ class Pay_Window(QDialog):
         self.client.reservations = {}
         global client_base
         client_base = self.client.Update_Tickets(client_base)
-        Update_Client_Base()
+        Update_Base('client_base.txt', client_base)
         self.close()
 
         
