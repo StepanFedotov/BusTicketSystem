@@ -1,3 +1,8 @@
+"""
+Основной файл проекта со всем UI
+"""
+
+
 from Classes.ClientClass import Client
 
 from Classes.RouteClass import Route
