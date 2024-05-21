@@ -439,7 +439,7 @@ class Login(QWidget):
         self.pwd_line.clear()
         if user == 'admin@gmail.com':
             self.windowAdmin = WindowAdmin(user)
-            self.windowAdmin.exec_()
+            self.windowAdmin.show()
         else:
             client = Client(user, client_base)
             self.windowUser = WindowUser(client)
